@@ -1,9 +1,7 @@
-package org.example;
+package ru.nsu.kislitsyn.task1;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
-    private class Child extends Thread {
+    private static class Child extends Thread {
         @Override
         public void run() {
             for (int i = 0; i <= 10; i++) {
@@ -18,6 +16,9 @@ public class Main {
         for (int i = 0; i <= 10; i++) {
             System.out.println("Parent process");
         }
-        child.join();
+        try {
+            child.join();
+        } catch (InterruptedException ignored) {
+        }
     }
 }
