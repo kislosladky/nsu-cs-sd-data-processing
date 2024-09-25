@@ -6,41 +6,33 @@ import java.util.List;
 
 public class Main {
     public static class Child extends Thread {
-        private final List<String> toPrint;
-        private final String postfix;
-        public Child(List<String> toPrint, String postfix) {
-            this.toPrint = toPrint;
-            this.postfix = postfix;
+        private final String[] toPrint;
+
+        public Child(String[] toPrint) {
+            this.toPrint = toPrint.clone();
         }
 
         @Override
         public void run() {
             for (String str : toPrint) {
-                System.out.println(str + postfix);
+                System.out.println(str);
             }
         }
     }
     public static void main(String[] args) {
-        List<String> toPrint = new ArrayList<>();
-        toPrint.add("Can you hear the silence ");
-        toPrint.add("Can you see the dark ");
-        toPrint.add("Can you fix the broken ");
-        toPrint.add("Can you feel my heart ");
-        toPrint.add("I tried so hard and got so far ");
-        toPrint.add("But in the end it doesn't even matter ");
+        String[] toPrint = {"first word", "first thread"};
+        String[][] changes = {{"second word", "second child"},
+                {"third word", "third child"},
+                {"forth word", "forth child"}};
 
-        List<Child> children = new ArrayList<>();
-        for (int i = 0; i <= 4; i++) {
-            Child child = new Child(toPrint, Integer.toString(i));
+        for (int i = 0; i < 4; i++) {
+
+            Child child = new Child(toPrint);
             child.start();
-            children.add(child);
-        }
 
-        try {
-            for (Child child : children) {
-                child.join();
+            if (i < 3) {
+                toPrint = changes[i];
             }
-        } catch (InterruptedException ignored) {
         }
     }
 }
