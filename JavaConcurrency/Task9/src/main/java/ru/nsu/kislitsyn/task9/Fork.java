@@ -4,7 +4,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class Fork {
-    private int id;
+    private final int id;
     private final Lock lock = new ReentrantLock();
 
     public Fork (int id) {

@@ -2,11 +2,12 @@ package ru.nsu.kislitsyn.task9;
 
 import java.util.Random;
 
-public class PhilosopherFix extends Thread implements Philosopher{
+
+public class PhilosopherUnfixed extends Thread implements Philosopher{
     Fork[] forks;
     Random random = new Random();
     int id;
-    public PhilosopherFix(int id, Fork[] forks) {
+    public PhilosopherUnfixed(int id, Fork[] forks) {
         this.id = id;
         this.forks = forks;
     }
@@ -21,17 +22,7 @@ public class PhilosopherFix extends Thread implements Philosopher{
             }
 
             forks[0].lock();
-            while (!forks[1].tryLock()) {
-                forks[0].unlock();
-                System.out.println("Philosopher " + id + " is waiting");
-                try {
-                    Thread.sleep(500L * random.nextInt(1, 10));
-                } catch (InterruptedException exception) {
-                    return;
-                }
-                forks[0].lock();
-            }
-
+            forks[1].lock();
             System.out.println("Philosopher " + id + " is eating");
             try {
                 Thread.sleep(500L * random.nextInt(1, 10));

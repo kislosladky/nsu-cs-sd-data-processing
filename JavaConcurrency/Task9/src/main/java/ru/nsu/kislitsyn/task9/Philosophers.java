@@ -15,7 +15,7 @@ public class Philosophers {
         List<Philosopher> philosophers = new ArrayList<>();
 
         for (int i = 0; i < 5; i++) {
-            Philosopher philosopher = new Philosopher(i, new Fork[]{forks[i], forks[(i + 1) % 5]});
+            Philosopher philosopher = new PhilosopherUnfixed(i, new Fork[]{forks[i], forks[(i + 1) % 5]});
             philosopher.start();
             philosophers.add(philosopher);
         }
