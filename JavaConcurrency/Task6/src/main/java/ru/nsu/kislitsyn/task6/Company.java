@@ -4,12 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 public final class Company {
     private final List<Department> departments;
+
     public Company(final int departmentsCount) {
         this.departments = new ArrayList<>(departmentsCount);
         for (int i = 0; i < departmentsCount; i++) {
             departments.add(i, new Department(i));
         }
     }
+
     /**
      * Вывод результата по всем отделам.
      * P.S. Актуально после того, как все отделы выполнят свою работу.
@@ -22,6 +24,7 @@ public final class Company {
                 .orElse(-1);
         System.out.println("The sum of all calculations is: " + result);
     }
+
     /**
      * @return Количество доступных отделов для симуляции выполнения
     работы.
