@@ -22,6 +22,11 @@ public class PhilosopherUnfixed extends Thread implements Philosopher{
             }
 
             forks[0].lock();
+            try {
+                Thread.sleep(500L * random.nextInt(1, 10));
+            } catch (InterruptedException exception) {
+                return;
+            }
             forks[1].lock();
             System.out.println("Philosopher " + id + " is eating");
             try {
