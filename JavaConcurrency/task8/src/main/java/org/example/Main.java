@@ -14,6 +14,7 @@ public class Main {
         private double result = 0;
         private long iterations = 0;
         private long finalIteration = Long.MAX_VALUE;
+
         public Child (int startIndex, int step) {
             this.startIndex = startIndex;
             this.step = step;
@@ -45,7 +46,7 @@ public class Main {
 
                 if (Thread.interrupted()) {
                     try {
-                        Thread.sleep(10);
+                        Thread.sleep(step * 20L);
                     } catch (InterruptedException e) {
                         System.err.println(e.getMessage());
                     }
@@ -66,7 +67,6 @@ public class Main {
     }
 
     void finish() {
-        System.out.println("finishing");
         setMaxIteration();
         double result = 0;
         try {
@@ -78,9 +78,7 @@ public class Main {
             System.err.println(e.getMessage());
         }
 
-        System.out.println(result*4);
-
-//        System.out.println("Result is " + result*4);
+        System.out.println(result*4.0);
     }
 
     private void setMaxIteration() {
@@ -102,14 +100,6 @@ public class Main {
     public static void main(String[] args) {
         Main main = new Main();
 
-        SignalHandler handler = signal -> {
-            System.out.println("Получен сигнал: " + signal.getName());
-            main.finish();
-        };
-        Signal.handle(new Signal("INT"), handler);
-
-
-
         int threadNumber;
         System.out.println("How many threads do you want?");
         try (Scanner sc = new Scanner(System.in)) {
@@ -118,6 +108,11 @@ public class Main {
 
         main.start(threadNumber);
 
+        SignalHandler handler = signal -> {
+            System.out.println("\nПолучен сигнал: " + signal.getName());
+            main.finish();
+        };
+        Signal.handle(new Signal("INT"), handler);
 
     }
 }
