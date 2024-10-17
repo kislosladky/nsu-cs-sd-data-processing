@@ -1,34 +1,25 @@
 package ru.nsu.kislitsyn.task10;
 
-
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
 public class Main {
-    static Lock lock = new ReentrantLock();
-    static Condition parentTurn = lock.newCondition();
-    static Condition childTurn = lock.newCondition();
+    private static final Object monitor = new Object();
     static volatile boolean isParentTurn = true;
 
     private static class Child extends Thread {
         @Override
         public void run() {
             for (int i = 0; i < 10; i++) {
-                lock.lock();
-                try {
+                synchronized (monitor) {
                     while (isParentTurn) {
-                        childTurn.await();
+                        try {
+                            monitor.wait();
+                        } catch (InterruptedException e) {
+                            System.err.println(e.getMessage());
+                        }
                     }
                     System.out.println("Child thread");
                     isParentTurn = true;
-                    parentTurn.signal();
-                } catch (InterruptedException e) {
-                    System.err.println(e.getMessage());
-                } finally {
-                    lock.unlock();
+                    monitor.notify();
                 }
-
             }
         }
     }
@@ -36,22 +27,22 @@ public class Main {
     public static void main(String[] args) {
         Child child = new Child();
         child.start();
-        for (int i = 0; i < 10; i++) {
-            lock.lock();
-            try {
-                while (!isParentTurn) {
-                    parentTurn.await();
-                }
 
+        for (int i = 0; i < 10; i++) {
+            synchronized (monitor) {
+                while (!isParentTurn) {
+                    try {
+                        monitor.wait();
+                    } catch (InterruptedException e) {
+                        System.err.println(e.getMessage());
+                    }
+                }
                 System.out.println("Parent process");
                 isParentTurn = false;
-                childTurn.signal();
-            } catch (InterruptedException e) {
-                System.err.println(e.getMessage());
-            } finally {
-                lock.unlock();
+                monitor.notify();
             }
         }
+
         try {
             child.join();
         } catch (InterruptedException exception) {
