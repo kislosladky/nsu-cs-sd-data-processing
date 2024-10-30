@@ -4,14 +4,12 @@ package ru.nsu.kislitsyn;
 import java.util.concurrent.Semaphore;
 
 class WidgetFactory {
-    // Семафоры для управления доступностью деталей
     private final Semaphore detailA = new Semaphore(0);
     private final Semaphore detailB = new Semaphore(0);
     private final Semaphore detailC = new Semaphore(0);
     private final Semaphore module = new Semaphore(0);
 
     public void produce() {
-        // Запуск потоков для производства деталей и сборки
         new Thread(this::produceDetailA).start();
         new Thread(this::produceDetailB).start();
         new Thread(this::produceDetailC).start();
@@ -22,9 +20,9 @@ class WidgetFactory {
     private void produceDetailA() {
         try {
             while (true) {
-                Thread.sleep(1000); // 1 секунда на изготовление детали A
+                Thread.sleep(1000);
                 detailA.release();
-                System.out.println("Деталь A изготовлена");
+                System.out.println("Part A is done");
             }
         } catch (InterruptedException e) {
             System.err.println(e.getMessage());
@@ -34,9 +32,9 @@ class WidgetFactory {
     private void produceDetailB() {
         try {
             while (true) {
-                Thread.sleep(2000); // 2 секунды на изготовление детали B
+                Thread.sleep(2000);
                 detailB.release();
-                System.out.println("Деталь B изготовлена");
+                System.out.println("Part B is done");
             }
         } catch (InterruptedException e) {
             System.err.println(e.getMessage());
@@ -46,9 +44,9 @@ class WidgetFactory {
     private void produceDetailC() {
         try {
             while (true) {
-                Thread.sleep(3000); // 3 секунды на изготовление детали C
+                Thread.sleep(3000);
                 detailC.release();
-                System.out.println("Деталь C изготовлена");
+                System.out.println("Part C is done");
             }
         } catch (InterruptedException e) {
             System.err.println(e.getMessage());
@@ -61,7 +59,7 @@ class WidgetFactory {
                 detailA.acquire();
                 detailB.acquire();
                 module.release();
-                System.out.println("Модуль собран из деталей A и B");
+                System.out.println("Module is assembled from parts A and B");
             }
         } catch (InterruptedException e) {
             System.err.println(e.getMessage());
@@ -73,7 +71,7 @@ class WidgetFactory {
             while (true) {
                 module.acquire();
                 detailC.acquire();
-                System.out.println("Винтик (Widget) собран из модуля и детали C");
+                System.out.println("Widget is assembled from module and part C");
             }
         } catch (InterruptedException e) {
             System.err.println(e.getMessage());
