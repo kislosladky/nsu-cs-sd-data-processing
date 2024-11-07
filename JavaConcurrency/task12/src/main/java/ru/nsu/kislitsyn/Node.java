@@ -12,13 +12,7 @@ public class Node {
         this.value = value;
     }
 
-    synchronized void addNext(Node toAdd) {
-        toAdd.next = this.next;
-        toAdd.previous = this;
-        this.next = toAdd;
-    }
-
-    synchronized void swapWithNext() {
+    void swapWithNext() {
         Node nextNext = this.next.next;
         this.next.previous = this.previous;
         this.previous.next = this.next;
@@ -28,42 +22,12 @@ public class Node {
         this.next = nextNext;
     }
 
-    private int compare(Node to) {
+    int compare(Node to) {
+        if (to.value == null) {
+            return 1;
+        } else if (this.value == null){
+            return -1;
+        }
         return this.value.compareTo(to.value);
     }
-
-    synchronized void sort() {
-        boolean swapped;
-        Node current;
-
-        if (this == this.next) return;
-
-        do {
-            swapped = false;
-            current = this;
-
-            while (current.next != this) {
-
-                if (current.compare(current.next) > 0) {
-                    current.swapWithNext();
-                    swapped = true;
-                } else {
-                    current = current.next;
-                }
-            }
-        } while (swapped);
-    }
-
-
-    synchronized void printList() {
-        Node current = this;
-        do {
-            System.out.print(current.value + " ");
-            current = current.next;
-        } while (current != null && current != this);
-        System.out.println();
-    }
-
-
-
 }

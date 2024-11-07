@@ -6,9 +6,9 @@ import java.util.Scanner;
 
 public class Main {
     static class Child extends Thread {
-        Node list;
+        MyList list;
 
-        Child(Node list) {
+        Child(MyList list) {
             this.list = list;
         }
 
@@ -29,20 +29,19 @@ public class Main {
     public static void main(String[] args) {
 
         try (Scanner sc = new Scanner(System.in)) {
-            String input = sc.nextLine();
-            Node list = new Node(input);
+            MyList list = new MyList();
             Child child = new Child(list);
             child.start();
-
             while (true) {
-                input = sc.nextLine();
+                String input = sc.nextLine();
                 int currentIndex = 0;
                 if (input.compareTo("") == 0) {
                     list.printList();
                     continue;
                 }
                 while (currentIndex < input.length()) {
-                    list.addNext(new Node(input.substring(currentIndex, Math.min(currentIndex + 80, input.length()))));
+                    int endIndex = Math.min(currentIndex + 80, input.length());
+                    list.add(input.substring(currentIndex, endIndex));
                     currentIndex += 80;
                 }
             }
