@@ -4,7 +4,7 @@
   (map (fn [word] (str char word)) words))
 
 (defn filter-duplicates [words]
-  (filter (fn [word] (= (count (set word)) (count word))) words))
+  (remove (fn [word] (= (first word) (second word))) words))
 
 (defn add-alphabet [words alphabet]
   (reduce concat (map (fn [x] (add-char x words)) alphabet)))
@@ -18,10 +18,9 @@
      alphabet
      (range (- length 1))))
 
-;; (defn -main [& args]
-;;   (all-strings alphabet times))
 (defn -main []
-  (let [chars '("a" "b" "c" )
-        length 2
+  (let [chars '("a" "b" "c" "d")
+        length 4
         allStrings (all-strings chars length)]
-    (println "Generated strings:" allStrings)))
+    (println (count allStrings)))
+  )
