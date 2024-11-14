@@ -44,7 +44,7 @@ public class MyList {
     void printList() {
         synchronized (head) {
             Node current = head.next;
-            for (int i = 0; i < length; i++) {
+            while (current != head) {
                 System.out.print(current.value + " ");
                 current = current.next;
             }
