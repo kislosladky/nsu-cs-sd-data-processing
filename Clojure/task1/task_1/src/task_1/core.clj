@@ -12,8 +12,16 @@
 (defn add-n-filter [words alphabet]
   (filter-duplicates (add-alphabet words alphabet)))
 
-(defn all-strings [alphabet times]
+(defn all-strings [alphabet length]
   (reduce
      (fn [words _] (add-n-filter words alphabet))
      alphabet
-     (range (- times 1))))
+     (range (- length 1))))
+
+;; (defn -main [& args]
+;;   (all-strings alphabet times))
+(defn -main []
+  (let [chars '("a" "b" "c" )
+        length 2
+        allStrings (all-strings chars length)]
+    (println "Generated strings:" allStrings)))
