@@ -6,7 +6,9 @@
 (defn sieve [stream]
   (lazy-seq
    (let [prime (first stream)]
-     (cons prime (sieve (filter #(not (zero? (mod % prime))) (rest stream)))))))
+     (cons prime (sieve (filter 
+                         (fn[x](not (zero? (mod x prime)))) 
+                         (rest stream)))))))
 
 
 (def primes (sieve (iterate inc 2)))
