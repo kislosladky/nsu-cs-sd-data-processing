@@ -17,110 +17,306 @@ public class PeopleHandler extends DefaultHandler {
 
     private Tag currentTag;
 
-//    @Override
-//    public void startDocument() throws SAXException {
-//        System.out.println("startDocument");
-//    }
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-//        tags.add(qName);
-        if (qName.equals("person")) {
-            if (attributes.getLength() > 0) {
-                String id = attributes.getValue("id");
-                String name = attributes.getValue("name");
-                if (id != null) {
-                    currentPerson.setId(id);
+        switch (qName) {
+            case "person" -> {
+                if (attributes.getLength() > 0) {
+                    String id = attributes.getValue("id");
+                    String name = attributes.getValue("name");
+                    if (id != null) {
+                        currentPerson = people.getById(id.trim()).orElse(new Person());
+                        currentPerson.setId(id);
+                    } else {
+                        List<String> fullname =
+                                Arrays.stream(name.split(" "))
+                                        .filter(x -> !x.equals(" "))
+                                        .toList();
+
+                        assert (fullname.size() > 1);
+                        List<Person> potentialPersons = people.getByFullname(fullname.getFirst(), fullname.getLast());
+                        if (potentialPersons.isEmpty()) {
+                            currentPerson = new Person();
+                        } else {
+                            currentPerson = potentialPersons.getFirst();
+                        }
+                        currentPerson.setFirstname(fullname.getFirst());
+                        currentPerson.setSurname(fullname.getLast());
+                    }
+                }
+            }
+            case "gender" -> {
+                if (attributes.getLength() > 0) {
+                    String gender = attributes.getValue("value").trim();
+                    switch (gender) {
+                        case "male":
+                            currentPerson.setGender(Gender.MALE);
+                            break;
+                        case "female":
+                            currentPerson.setGender(Gender.FEMALE);
+                            break;
+                    }
                 } else {
-                    List<String> fullname = Arrays.stream(name.split(" ")).filter(x -> !x.equals(" ")).toList();
-                    assert (fullname.size() > 1);
-                    currentPerson.setFirstname(fullname.getFirst());
-                    currentPerson.setSurname(fullname.get(1));
+                    currentTag = Tag.GENDER;
                 }
             }
-            return;
-        }
-
-        if (qName.equals("gender")) {
-            if (attributes.getLength() > 0) {
-                String gender = attributes.getValue("value");
-                switch (gender) {
-                    case "male": currentPerson.setGender(Gender.MALE); break;
-                    case "female": currentPerson.setGender(Gender.FEMALE); break;
+            case "id" -> {
+                if (attributes.getLength() > 0) {
+                    String id = attributes.getValue("value").trim();
+                    currentPerson.setId(id);
                 }
             }
-            return;
-        }
 
-        if (qName.equals("id")) {
-            if (attributes.getLength() > 0) {
-                String id = attributes.getValue("value");
-                currentPerson.setId(id);
+            case "firstname" -> {
+                if (attributes.getLength() > 0) {
+                    String firstname = attributes.getValue("value").trim();
+                    currentPerson.setFirstname(firstname);
+                } else {
+                    currentTag = Tag.FIRSTNAME;
+                }
             }
-        }
 
-        if (qName.equals("firstname")) {
-            if (attributes.getLength() > 0) {
-                String firstname = attributes.getValue("value");
-                currentPerson.setFirstname(firstname);
-            } else {
-                currentTag = Tag.FIRSTNAME;
+            case "surname" -> {
+                if (attributes.getLength() > 0) {
+                    String surname = attributes.getValue("value").trim();
+                    currentPerson.setSurname(surname);
+                }
             }
-        }
 
-        if (qName.equals("surname")) {
-            if (attributes.getLength() > 0) {
-                String surname = attributes.getValue("value");
-                currentPerson.setSurname(surname);
+            case "family-name" -> {
+                currentTag = Tag.FAMILYNAME;
+
             }
-        }
+            case "first" -> {
+                currentTag = Tag.FIRST;
 
-        if (qName.equals("family-name")) {
-            currentTag = Tag.FAMILYNAME;
-        }
-
-        if (qName.equals("first")) {
-            currentTag = Tag.FIRST;
-        }
-
-        if (qName.equals("family")) {
-            currentTag = Tag.FAMILY;
-        }
-
-        if (qName.equals("children-number")) {
-            if (attributes.getLength() > 0) {
-                String number = attributes.getValue("value");
-                currentPerson.setChildrenNumber(Integer.parseInt(number));
             }
-        }
+            case "family" -> {
+                currentTag = Tag.FAMILY;
 
-        if (qName.equals("siblings-number")) {
-            if (attributes.getLength() > 0) {
-                String number = attributes.getValue("value");
-                currentPerson.setSiblingsNumber(Integer.parseInt(number));
             }
+            case "children-number" -> {
+                if (attributes.getLength() > 0) {
+                    String number = attributes.getValue("value");
+                    currentPerson.setChildrenNumber(Integer.parseInt(number));
+                }
+
+            }
+            case "siblings-number" -> {
+                if (attributes.getLength() > 0) {
+                    String number = attributes.getValue("value");
+                    currentPerson.setSiblingsNumber(Integer.parseInt(number));
+                }
+            }
+
+            case "siblings" -> {
+                if (attributes.getLength() > 0) {
+                    String siblingIds = attributes.getValue("val");
+                    addSiblingsByIds(siblingIds);
+                }
+            }
+
+            case "brother" -> {
+                currentTag = Tag.BROTHER;
+            }
+
+            case "sister" -> {
+                currentTag = Tag.SISTER;
+            }
+
+            case "parent" -> {
+                if (attributes.getLength() > 0) {
+                    String parentId = attributes.getValue("value");
+                    addParentById(parentId);
+                } else {
+                    currentTag = Tag.PARENT;
+                }
+            }
+
+            case "father" -> {
+                currentTag = Tag.FATHER;
+            }
+
+            case "mother" -> {
+                currentTag = Tag.MOTHER;
+            }
+
+            case "wife" -> {
+                if (attributes.getLength() > 0) {
+                    String wifeId = attributes.getValue("value").trim();
+                    addSpouseById(wifeId, Gender.FEMALE);
+                }
+            }
+
+            case "husband" -> {
+                if (attributes.getLength() > 0) {
+                    String husbandId = attributes.getValue("value").trim();
+                    addSpouseById(husbandId, Gender.MALE);
+                }
+            }
+
+            case "daughter" -> {
+                if (attributes.getLength() > 0) {
+                    String daughterId = attributes.getValue("id").trim();
+                    addChildById(daughterId, Gender.FEMALE);
+                }
+            }
+
+            case "son" -> {
+                if (attributes.getLength() > 0) {
+                    String sonId = attributes.getValue("id").trim();
+                    addChildById(sonId, Gender.MALE);
+                }
+            }
+
+            case "child" -> {
+                currentTag = Tag.CHILD;
+            }
+
+            default -> {}
         }
 
     }
 
+
     @Override
     public void characters(char[] ch, int start, int length) throws SAXException {
-        String string = new String(ch, start, length);
+        String content = new String(ch, start, length).trim();
         if (currentTag == null || start == length) {
             return;
         }
         switch (currentTag) {
-            case FIRST, FIRSTNAME: currentPerson.setFirstname(string); break;
-            case FAMILY, FAMILYNAME: currentPerson.setSurname(string); break;
+            case FIRST, FIRSTNAME -> currentPerson.setFirstname(content);
+            case FAMILY, FAMILYNAME -> currentPerson.setSurname(content);
+            case BROTHER -> addSiblingByName(content, Gender.MALE);
+            case SISTER -> addSiblingByName(content, Gender.FEMALE);
+            case PARENT -> addParentByName(content);
+            case FATHER -> addParentByName(content, Gender.MALE);
+            case MOTHER -> addParentByName(content, Gender.FEMALE);
+            case GENDER -> setGender(content);
+            case CHILD -> setChild(content);
         }
     }
 
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException {
         if (qName.equals("person")) {
-            people.processPerson(currentPerson);
-            currentPerson = new Person();
+//            people.processPerson(currentPerson);
+            people.addPerson(currentPerson);
         }
         currentTag = null;
+    }
+
+    private void addChildById(String childId, Gender childGender) {
+        Person child = people.getById(childId).orElse(new Person());
+        child.setId(childId);
+        child.addParent(currentPerson);
+        child.setGender(childGender);
+        currentPerson.addChild(child);
+    }
+
+    private void setChild(String childName) {
+        List<String> childFullName =
+                Arrays.stream(childName.split(" "))
+                        .filter(x -> !x.equals(" "))
+                        .toList();
+
+        List<Person> potentialChildren =
+                people.getByFullname(
+                        childFullName.getFirst(),
+                        childFullName.getLast()
+                );
+
+        //TODO how to do it??????
+    }
+
+    private void setGender(String gender) {
+        switch (gender.trim()) {
+            case "M" -> currentPerson.setGender(Gender.MALE);
+            case "F" -> currentPerson.setGender(Gender.FEMALE);
+        }
+    }
+
+    private void addSpouseById(String id, Gender spouseGender) {
+        Person spouse = people.getById(id).orElse(new Person());
+        spouse.setId(id);
+        spouse.setSpouse(currentPerson);
+        currentPerson.setSpouse(spouse);
+        if (spouseGender.equals(Gender.FEMALE)) {
+            spouse.setGender(Gender.FEMALE);
+            currentPerson.setGender(Gender.MALE);
+        } else {
+            spouse.setGender(Gender.MALE);
+            currentPerson.setGender(Gender.FEMALE);
+        }
+    }
+
+
+    private void addSiblingByName(String rawName, Gender siblingGender) {
+        List<String> fullName =
+                Arrays.stream(rawName.split(" "))
+                .filter(x -> !x.equals(" "))
+                .toList();
+
+        List<Person> potentialSiblings =
+                people.getByFullname(
+                        fullName.getFirst(),
+                        fullName.getLast());
+
+        for (Person person : potentialSiblings) {
+            person.setGender(siblingGender);
+            addCurrentPersonAsSiblingTo(person);
+        }
+    }
+
+    private void addSiblingsByIds(String siblingIds) {
+        List<String> ids  =
+                Arrays.stream(siblingIds.split(" "))
+                        .filter(x -> !x.equals(" "))
+                        .toList();
+        for (String id : ids) {
+            Optional<Person> sibling = people.getById(id);
+            if (sibling.isEmpty()) {
+                sibling = Optional.of(people.addEmptyPerson(id));
+            }
+            addCurrentPersonAsSiblingTo(sibling.get());
+        }
+    }
+
+    private void addCurrentPersonAsSiblingTo(Person sibling) {
+        sibling.getSiblings().add(currentPerson);
+    }
+
+    private void addParentById(String parentId) {
+        if (parentId.equals("UNKNOWN")) {
+            return;
+        }
+        Person parent = people.getById(parentId).orElse(new Person());
+        parent.setId(parentId);
+
+        parent.addChild(currentPerson);
+        currentPerson.addParent(parent);
+    }
+
+    private void addParentByName(String parentName) {
+        if (parentName.equals("UNKNOWN")) {
+            return;
+        }
+        throw new RuntimeException("Parent handling not implemented");
+    }
+
+    private void addParentByName(String parentName, Gender parentGender) {
+        List<String> fullname = Arrays.stream(parentName.split(" "))
+                .filter(x -> !x.equals(" "))
+                .toList();
+
+        List<Person> potentialParents = people.getByFullname(fullname.getFirst(), fullname.getLast());
+        for (Person parent : potentialParents) {
+            parent.setGender(parentGender);
+            parent.addChild(currentPerson);
+            currentPerson.addParent(parent);
+        }
+
     }
 }

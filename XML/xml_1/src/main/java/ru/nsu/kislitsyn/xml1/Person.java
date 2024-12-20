@@ -3,22 +3,23 @@ package ru.nsu.kislitsyn.xml1;
 import lombok.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString
 public class Person {
     private String id;
-    private Person father;
-    private Person mother;
-    private List<Person> sons = new ArrayList<>();
-    private List<Person> daughters = new ArrayList<>();
-    private List<Person> brothers = new ArrayList<>();
-    private List<Person> sisters = new ArrayList<>();
+//    private List<Person> parents = new ArrayList<>();
+//    private List<Person> children = new ArrayList<>();
+//    private List<Person> siblings = new ArrayList<>();
+    private Set<Person> parents = new HashSet<>();
+    private Set<Person> children = new HashSet<>();
+    private Set<Person> siblings = new HashSet<>();
     private String firstname;
     private String surname;
     private Person spouse;
@@ -29,9 +30,10 @@ public class Person {
     public void merge(Person person) {
         this.id = id == null ? person.getId() : id;
 
-        this.father = father == null ? person.getFather() : father;
+//        this.father = father == null ? person.getFather() : father;
+//
+//        this.mother = mother == null ? person.getMother() : mother;
 
-        this.mother = mother == null ? person.getMother() : mother;
 
         this.firstname = firstname == null ? person.getFirstname() : firstname;
 
@@ -45,13 +47,22 @@ public class Person {
 
         this.childrenNumber = childrenNumber == 0 ? person.getChildrenNumber() : childrenNumber;
 
-        this.sons.addAll(person.getSons());
+        this.children.addAll(person.children);
 
-        this.daughters.addAll(person.getDaughters());
+        this.siblings.addAll(person.siblings);
+//        this.brothers.addAll(person.getBrothers());
+//
+//        this.sisters.addAll(person.getSisters());
+    }
 
-        this.brothers.addAll(person.getBrothers());
+    public Person addChild(Person child) {
+        this.children.add(child);
+        return child;
+    }
 
-        this.sisters.addAll(person.getSisters());
+    public Person addParent(Person parent) {
+        this.parents.add(parent);
+        return parent;
     }
 
     @Override
@@ -70,4 +81,55 @@ public class Person {
         }
         return false;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Person{");
+        sb.append("id='").append(id).append('\'');
+        sb.append(", firstname='").append(firstname).append('\'');
+        sb.append(", surname='").append(surname).append('\'');
+        sb.append(", gender=").append(gender);
+        sb.append(", spouse=").append(spouse != null ? spouse.getFirstname() + " " + spouse.getSurname() : "None");
+        sb.append(", siblingsNumber=").append(siblingsNumber);
+        sb.append(", childrenNumber=").append(childrenNumber);
+
+        sb.append(", parents=[");
+        for (Person parent : parents) {
+            if (parent.getFirstname() == null && parent.getSiblings() == null) {
+                continue;
+            }
+            String relation = parent.getGender() == Gender.MALE ? "father" : "mother";
+            sb.append(relation).append(": ").append(parent.getFirstname()).append(" ").append(parent.getSurname());
+            sb.append(", ");
+        }
+        sb.append(']');
+
+        sb.append(", children=[");
+        for (Person child : children) {
+            if (child.getFirstname() == null && child.getSiblings() == null) {
+                continue;
+            }
+            String relation = child.getGender() == Gender.MALE ? "son" : "daughter";
+            sb.append(relation).append(": ").append(child.getFirstname()).append(" ").append(child.getSurname());
+            sb.append(", ");
+        }
+        sb.append(']');
+
+        sb.append(", siblings=[");
+        for (Person sibling : siblings) {
+            if (sibling.getFirstname() == null && sibling.getSiblings() == null) {
+                continue;
+            }
+            String relation = sibling.getGender() == Gender.MALE ? "brother" : "sister";
+            sb.append(relation).append(": ").append(sibling.getFirstname()).append(" ").append(sibling.getSurname());
+            sb.append(", ");
+        }
+        sb.append(']');
+
+        sb.append('}');
+        return sb.toString();
+    }
+
+
 }

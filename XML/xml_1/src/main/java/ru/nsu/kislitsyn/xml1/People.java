@@ -2,63 +2,57 @@ package ru.nsu.kislitsyn.xml1;
 
 import lombok.Getter;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 
 public class People {
     @Getter
-    private final List<Person> people = new ArrayList<>();
+    private final Map<String, Person> people = new HashMap<>();
 
     public void processPerson(Person person) {
-        if (people.contains(person)) {
-            Person duplicate = people.stream().filter(p -> p.equals(person)).findFirst().orElse(null);
+        if (people.containsValue(person)) {
+            Person duplicate = people.values().stream().filter(p -> p.equals(person)).findFirst().orElse(null);
             assert duplicate != null;
             duplicate.merge(person);
         } else {
-            people.add(person);
+            people.put(person.getId(), person);
         }
     }
 
-//    public Optional<Person> getById(String id) {
-//        for (Person person : people) {
-//            if (person.getId().equals(id)) {
-//                return Optional.of(person);
-//            }
-//        }
-//        return Optional.empty();
-//    }
+    public void addPerson(Person person) {
+//        people.add(person);
+        people.put(person.getId(), person);
+    }
 
-//    public Optional<Person> getByFirstname(String name) {
-//        for (Person person : people) {
-//            if (person.getFirstname().equals(name)) {
-//                return Optional.of(person);
-//            }
-//        }
-//        return Optional.empty();
-//    }
+    public Person addEmptyPerson(String id) {
+        Person person = new Person();
+        person.setId(id);
+        people.put(id, person);
+        return person;
+    }
 
-//    public Optional<Person> getBySurname(String name) {
-//        for (Person person : people) {
-//            if (person.getSurname().equals(name)) {
-//                return Optional.of(person);
-//            }
-//        }
-//        return Optional.empty();
-//    }
+    public Optional<Person> getById(String id) {
+        Person person = people.get(id);
+        return person == null ?
+                Optional.empty() :
+                Optional.of(person);
+    }
 
-//    @Override
-//    public String toString() {
-//        StringBuilder sb = new StringBuilder();
-//        for (Person person : people) {
-//            sb.append(person.toString());
-//            sb.append("\n");
-//        }
-//        return sb.toString();
-//    }
+    public List<Person> getByFullname(String firstname, String surname) {
+        List<Person> result = new ArrayList<>();
+        for (Person person : people.values()) {
+            if (firstname.equals(person.getFirstname())
+                    && surname.equals(person.getSurname())) {
+                result.add(person);
+            }
+        }
+        return result;
+    }
+
     public void print() {
-        for (Person person : people) {
+        for (Person person : people.values()) {
             System.out.println(person);
         }
+        System.out.println("Amount is " + people.size());
     }
 }

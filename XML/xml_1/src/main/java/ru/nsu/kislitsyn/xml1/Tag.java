@@ -5,4 +5,11 @@ public enum Tag {
     FAMILY,
     FIRSTNAME,
     FAMILYNAME,
+    BROTHER,
+    SISTER,
+    PARENT,
+    FATHER,
+    MOTHER,
+    GENDER,
+    CHILD
 }
