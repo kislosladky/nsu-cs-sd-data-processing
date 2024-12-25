@@ -24,8 +24,8 @@ public class Person {
     private String surname;
     private Person spouse;
     private Gender gender;
-    private int siblingsNumber;
-    private int childrenNumber;
+    private int siblingsNumber = -1;
+    private int childrenNumber = -1;
 
     public void merge(Person person) {
         this.id = id == null ? person.getId() : id;
@@ -43,9 +43,9 @@ public class Person {
 
         this.gender = gender == null ? person.getGender() : gender;
 
-        this.siblingsNumber = siblingsNumber == 0 ? person.getSiblingsNumber() : siblingsNumber;
+        this.siblingsNumber = siblingsNumber == -1 ? person.getSiblingsNumber() : siblingsNumber;
 
-        this.childrenNumber = childrenNumber == 0 ? person.getChildrenNumber() : childrenNumber;
+        this.childrenNumber = childrenNumber == -1 ? person.getChildrenNumber() : childrenNumber;
 
         this.children.addAll(person.children);
 
@@ -65,6 +65,20 @@ public class Person {
         return parent;
     }
 
+    public boolean doesNotConflictWith(Person otherPerson) {
+        if (this.siblingsNumber == otherPerson.getSiblingsNumber()
+            || this.siblingsNumber == -1
+            || otherPerson.siblingsNumber == -1) {
+
+            if (this.childrenNumber == otherPerson.getChildrenNumber()
+                || this.childrenNumber == -1
+                || otherPerson.childrenNumber == -1) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -82,6 +96,22 @@ public class Person {
         return false;
     }
 
+
+    @Override
+    public int hashCode() {
+        int result = 17; // Начальное значение для хэш-кода
+        if (id != null) {
+            result = 31 * result + id.hashCode();
+        } else {
+            result = 31 * result + (firstname != null ? firstname.hashCode() : 0);
+            result = 31 * result + (surname != null ? surname.hashCode() : 0);
+            result = 31 * result + Integer.hashCode(childrenNumber);
+            result = 31 * result + Integer.hashCode(siblingsNumber);
+        }
+        return result;
+    }
+
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -90,13 +120,18 @@ public class Person {
         sb.append(", firstname='").append(firstname).append('\'');
         sb.append(", surname='").append(surname).append('\'');
         sb.append(", gender=").append(gender);
-        sb.append(", spouse=").append(spouse != null ? spouse.getFirstname() + " " + spouse.getSurname() : "None");
+        if (spouse != null) {
+            sb.append(", ").append(spouse.gender == Gender.MALE ? "husband=" : "wife=");
+            sb.append(spouse.getFirstname()).append(" ").append(spouse.getSurname());
+        } else {
+            sb.append(", spouse=None");
+        }
         sb.append(", siblingsNumber=").append(siblingsNumber);
         sb.append(", childrenNumber=").append(childrenNumber);
 
         sb.append(", parents=[");
         for (Person parent : parents) {
-            if (parent.getFirstname() == null && parent.getSiblings() == null) {
+            if (parent.getFirstname() == null && parent.getSurname() == null) {
                 continue;
             }
             String relation = parent.getGender() == Gender.MALE ? "father" : "mother";
@@ -107,7 +142,7 @@ public class Person {
 
         sb.append(", children=[");
         for (Person child : children) {
-            if (child.getFirstname() == null && child.getSiblings() == null) {
+            if (child.getFirstname() == null && child.getSurname() == null) {
                 continue;
             }
             String relation = child.getGender() == Gender.MALE ? "son" : "daughter";
@@ -118,7 +153,7 @@ public class Person {
 
         sb.append(", siblings=[");
         for (Person sibling : siblings) {
-            if (sibling.getFirstname() == null && sibling.getSiblings() == null) {
+            if (sibling.getFirstname() == null && sibling.getSurname() == null) {
                 continue;
             }
             String relation = sibling.getGender() == Gender.MALE ? "brother" : "sister";

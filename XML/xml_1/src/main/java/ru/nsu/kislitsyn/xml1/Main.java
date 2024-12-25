@@ -2,6 +2,8 @@ package ru.nsu.kislitsyn.xml1;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 
 public class Main {
     public static void main(String[] args) throws Exception {
@@ -11,7 +13,13 @@ public class Main {
         PeopleHandler handler = new PeopleHandler();
         parser.parse("people.xml", handler);
 
-        handler.getPeople().print();
+        try (FileOutputStream fos = new FileOutputStream("people.txt")) {
+            System.setOut(new PrintStream(fos));
+            handler.getPeople().print();
+            System.setOut(System.out);
+        }
+
+//        handler.getPeople().print();
 //        for (String id : handler.getIds()) {
 //            System.out.println(id);
 //        }

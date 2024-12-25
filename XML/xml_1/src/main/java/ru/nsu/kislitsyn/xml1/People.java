@@ -10,12 +10,34 @@ public class People {
     private final Map<String, Person> people = new HashMap<>();
 
     public void processPerson(Person person) {
-        if (people.containsValue(person)) {
-            Person duplicate = people.values().stream().filter(p -> p.equals(person)).findFirst().orElse(null);
-            assert duplicate != null;
-            duplicate.merge(person);
-        } else {
+//        if (people.containsValue(person)) {
+//            Person duplicate = people.values().stream().filter(p -> p.equals(person)).findFirst().orElse(null);
+//            assert duplicate != null;
+//            duplicate.merge(person);
+//        } else {
+//            people.put(person.getId(), person);
+//        }person
+        if (person.getId() != null) {
             people.put(person.getId(), person);
+        } else {
+            List<Person> mergeCandidates = getByFullname(
+                    List.of(person.getFirstname(),
+                            person.getSurname())
+            );
+
+            if (mergeCandidates.isEmpty()) {
+                people.put(UUID.randomUUID().toString(), person);
+            }
+
+            for (Person mergePerson : mergeCandidates) {
+                if (person.doesNotConflictWith(mergePerson)) {
+                    mergePerson.merge(person);
+                    if (mergePerson.getId() != null) {
+                        people.put(mergePerson.getId(), mergePerson);
+                    }
+                    break;
+                }
+            }
         }
     }
 
@@ -38,11 +60,11 @@ public class People {
                 Optional.of(person);
     }
 
-    public List<Person> getByFullname(String firstname, String surname) {
+    public List<Person> getByFullname(List<String> fullname) {
         List<Person> result = new ArrayList<>();
         for (Person person : people.values()) {
-            if (firstname.equals(person.getFirstname())
-                    && surname.equals(person.getSurname())) {
+            if (fullname.getFirst().equals(person.getFirstname())
+                    && fullname.getLast().equals(person.getSurname())) {
                 result.add(person);
             }
         }
@@ -50,9 +72,28 @@ public class People {
     }
 
     public void print() {
-        for (Person person : people.values()) {
-            System.out.println(person);
+//        for (Person person : people.values()) {
+//            System.out.println(person);
+//        }
+        for (String key : people.keySet()) {
+
+            System.out.println(key + ": " + people.get(key));
+
         }
         System.out.println("Amount is " + people.size());
+    }
+
+    public void removeWrongKeys() {
+        Set<String> keysToRemove = new HashSet<>();
+        for (String key : people.keySet()) {
+            if (PeopleHandler.isUUID(key)) {
+                keysToRemove.add(key);
+            }
+        }
+
+        for (String key : keysToRemove) {
+            people.remove(key);
+        }
+
     }
 }

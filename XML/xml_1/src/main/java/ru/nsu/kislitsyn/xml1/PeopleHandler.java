@@ -10,13 +10,10 @@ import java.util.*;
 public class PeopleHandler extends DefaultHandler {
     @Getter
     private final People people = new People();
-    @Getter
-    private final Set<String> ids = new HashSet<>();
 
-    private Person currentPerson = new Person();
+    private Person currentPerson;
 
     private Tag currentTag;
-
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
@@ -29,18 +26,15 @@ public class PeopleHandler extends DefaultHandler {
                         currentPerson = people.getById(id.trim()).orElse(new Person());
                         currentPerson.setId(id);
                     } else {
-                        List<String> fullname =
-                                Arrays.stream(name.split(" "))
-                                        .filter(x -> !x.equals(" "))
-                                        .toList();
+                        List<String> fullname = splitByWhitespaces(name);
 
                         assert (fullname.size() > 1);
-                        List<Person> potentialPersons = people.getByFullname(fullname.getFirst(), fullname.getLast());
-                        if (potentialPersons.isEmpty()) {
+//                        List<Person> potentialPersons = people.getByFullname(fullname);
+//                        if (potentialPersons.isEmpty()) {
                             currentPerson = new Person();
-                        } else {
-                            currentPerson = potentialPersons.getFirst();
-                        }
+//                        } else {
+//                            currentPerson = potentialPersons.getFirst();
+//                        }
                         currentPerson.setFirstname(fullname.getFirst());
                         currentPerson.setSurname(fullname.getLast());
                     }
@@ -64,7 +58,9 @@ public class PeopleHandler extends DefaultHandler {
             case "id" -> {
                 if (attributes.getLength() > 0) {
                     String id = attributes.getValue("value").trim();
-                    currentPerson.setId(id);
+                    if (currentPerson.getId() == null || isUUID(currentPerson.getId())) {
+                        currentPerson.setId(id);
+                    }
                 }
             }
 
@@ -98,14 +94,14 @@ public class PeopleHandler extends DefaultHandler {
             }
             case "children-number" -> {
                 if (attributes.getLength() > 0) {
-                    String number = attributes.getValue("value");
+                    String number = attributes.getValue("value").trim();
                     currentPerson.setChildrenNumber(Integer.parseInt(number));
                 }
 
             }
             case "siblings-number" -> {
                 if (attributes.getLength() > 0) {
-                    String number = attributes.getValue("value");
+                    String number = attributes.getValue("value").trim();
                     currentPerson.setSiblingsNumber(Integer.parseInt(number));
                 }
             }
@@ -127,7 +123,7 @@ public class PeopleHandler extends DefaultHandler {
 
             case "parent" -> {
                 if (attributes.getLength() > 0) {
-                    String parentId = attributes.getValue("value");
+                    String parentId = attributes.getValue("value").trim();
                     addParentById(parentId);
                 } else {
                     currentTag = Tag.PARENT;
@@ -202,10 +198,15 @@ public class PeopleHandler extends DefaultHandler {
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException {
         if (qName.equals("person")) {
-//            people.processPerson(currentPerson);
-            people.addPerson(currentPerson);
+            people.processPerson(currentPerson);
+//            people.addPerson(currentPerson);
         }
         currentTag = null;
+    }
+
+    @Override
+    public void endDocument() throws SAXException {
+        people.removeWrongKeys();
     }
 
     private void addChildById(String childId, Gender childGender) {
@@ -217,16 +218,9 @@ public class PeopleHandler extends DefaultHandler {
     }
 
     private void setChild(String childName) {
-        List<String> childFullName =
-                Arrays.stream(childName.split(" "))
-                        .filter(x -> !x.equals(" "))
-                        .toList();
+        List<String> childFullName = splitByWhitespaces(childName);
 
-        List<Person> potentialChildren =
-                people.getByFullname(
-                        childFullName.getFirst(),
-                        childFullName.getLast()
-                );
+        List<Person> potentialChildren = people.getByFullname(childFullName);
 
         //TODO how to do it??????
     }
@@ -254,28 +248,20 @@ public class PeopleHandler extends DefaultHandler {
 
 
     private void addSiblingByName(String rawName, Gender siblingGender) {
-        List<String> fullName =
-                Arrays.stream(rawName.split(" "))
-                .filter(x -> !x.equals(" "))
-                .toList();
+        List<String> fullName = splitByWhitespaces(rawName);
 
-        List<Person> potentialSiblings =
-                people.getByFullname(
-                        fullName.getFirst(),
-                        fullName.getLast());
+        List<Person> potentialSiblings = people.getByFullname(fullName);
 
         for (Person person : potentialSiblings) {
-            person.setGender(siblingGender);
-            addCurrentPersonAsSiblingTo(person);
+                person.setGender(siblingGender);
+                addCurrentPersonAsSiblingTo(person);
         }
     }
 
     private void addSiblingsByIds(String siblingIds) {
-        List<String> ids  =
-                Arrays.stream(siblingIds.split(" "))
-                        .filter(x -> !x.equals(" "))
-                        .toList();
-        for (String id : ids) {
+        List<String> splittedIds  = splitByWhitespaces(siblingIds);
+
+        for (String id : splittedIds) {
             Optional<Person> sibling = people.getById(id);
             if (sibling.isEmpty()) {
                 sibling = Optional.of(people.addEmptyPerson(id));
@@ -286,6 +272,7 @@ public class PeopleHandler extends DefaultHandler {
 
     private void addCurrentPersonAsSiblingTo(Person sibling) {
         sibling.getSiblings().add(currentPerson);
+        currentPerson.getSiblings().add(sibling);
     }
 
     private void addParentById(String parentId) {
@@ -307,16 +294,32 @@ public class PeopleHandler extends DefaultHandler {
     }
 
     private void addParentByName(String parentName, Gender parentGender) {
-        List<String> fullname = Arrays.stream(parentName.split(" "))
-                .filter(x -> !x.equals(" "))
-                .toList();
+        List<String> fullname = splitByWhitespaces(parentName);
 
-        List<Person> potentialParents = people.getByFullname(fullname.getFirst(), fullname.getLast());
+        List<Person> potentialParents = people.getByFullname(fullname);
         for (Person parent : potentialParents) {
             parent.setGender(parentGender);
             parent.addChild(currentPerson);
             currentPerson.addParent(parent);
         }
-
     }
+
+    private List<String> splitByWhitespaces(String input) {
+        return Arrays.stream(input.split(" "))
+                .filter(x -> !x.equals(" "))
+                .toList();
+    }
+
+    public static boolean isUUID(String str) {
+        if (str == null) {
+            return false;
+        }
+        try {
+            UUID uuid = UUID.fromString(str);
+            return uuid.toString().equals(str); // Убедимся, что формат полностью совпадает
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
 }
