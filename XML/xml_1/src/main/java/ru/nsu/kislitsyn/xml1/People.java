@@ -10,13 +10,6 @@ public class People {
     private final Map<String, Person> people = new HashMap<>();
 
     public void processPerson(Person person) {
-//        if (people.containsValue(person)) {
-//            Person duplicate = people.values().stream().filter(p -> p.equals(person)).findFirst().orElse(null);
-//            assert duplicate != null;
-//            duplicate.merge(person);
-//        } else {
-//            people.put(person.getId(), person);
-//        }person
         if (person.getId() != null) {
             people.put(person.getId(), person);
         } else {
@@ -27,6 +20,7 @@ public class People {
 
             if (mergeCandidates.isEmpty()) {
                 people.put(UUID.randomUUID().toString(), person);
+                return;
             }
 
             for (Person mergePerson : mergeCandidates) {
@@ -42,7 +36,6 @@ public class People {
     }
 
     public void addPerson(Person person) {
-//        people.add(person);
         people.put(person.getId(), person);
     }
 
@@ -72,21 +65,21 @@ public class People {
     }
 
     public void print() {
-//        for (Person person : people.values()) {
-//            System.out.println(person);
-//        }
-        for (String key : people.keySet()) {
-
-            System.out.println(key + ": " + people.get(key));
-
+        for (Person person : people.values()) {
+            System.out.println(person);
         }
+//        for (String key : people.keySet()) {
+//
+//            System.out.println(key + ": " + people.get(key));
+//
+//        }
         System.out.println("Amount is " + people.size());
     }
 
     public void removeWrongKeys() {
         Set<String> keysToRemove = new HashSet<>();
         for (String key : people.keySet()) {
-            if (PeopleHandler.isUUID(key)) {
+            if (Utils.isUUID(key)) {
                 keysToRemove.add(key);
             }
         }
@@ -94,6 +87,5 @@ public class People {
         for (String key : keysToRemove) {
             people.remove(key);
         }
-
     }
 }

@@ -6,12 +6,13 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class PeopleHandler extends DefaultHandler {
     @Getter
     private final People people = new People();
 
-    private Person currentPerson;
+    private Person currentPerson = new Person();
 
     private Tag currentTag;
 
@@ -19,6 +20,7 @@ public class PeopleHandler extends DefaultHandler {
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
         switch (qName) {
             case "person" -> {
+                currentPerson.setId(UUID.randomUUID().toString());
                 if (attributes.getLength() > 0) {
                     String id = attributes.getValue("id");
                     String name = attributes.getValue("name");
@@ -26,15 +28,7 @@ public class PeopleHandler extends DefaultHandler {
                         currentPerson = people.getById(id.trim()).orElse(new Person());
                         currentPerson.setId(id);
                     } else {
-                        List<String> fullname = splitByWhitespaces(name);
-
-                        assert (fullname.size() > 1);
-//                        List<Person> potentialPersons = people.getByFullname(fullname);
-//                        if (potentialPersons.isEmpty()) {
-                            currentPerson = new Person();
-//                        } else {
-//                            currentPerson = potentialPersons.getFirst();
-//                        }
+                        List<String> fullname = Utils.splitByWhitespaces(name.trim());
                         currentPerson.setFirstname(fullname.getFirst());
                         currentPerson.setSurname(fullname.getLast());
                     }
@@ -58,7 +52,7 @@ public class PeopleHandler extends DefaultHandler {
             case "id" -> {
                 if (attributes.getLength() > 0) {
                     String id = attributes.getValue("value").trim();
-                    if (currentPerson.getId() == null || isUUID(currentPerson.getId())) {
+                    if (currentPerson.getId() == null || Utils.isUUID(currentPerson.getId())) {
                         currentPerson.setId(id);
                     }
                 }
@@ -151,6 +145,14 @@ public class PeopleHandler extends DefaultHandler {
                     addSpouseById(husbandId, Gender.MALE);
                 }
             }
+            case "spouce" -> {
+                if (attributes.getLength() > 0) {
+                    String spouseName = attributes.getValue("value").trim();
+                    if (!spouseName.equals("NONE")) {
+                        addSpouseByName(spouseName);
+                    }
+                }
+            }
 
             case "daughter" -> {
                 if (attributes.getLength() > 0) {
@@ -191,7 +193,7 @@ public class PeopleHandler extends DefaultHandler {
             case FATHER -> addParentByName(content, Gender.MALE);
             case MOTHER -> addParentByName(content, Gender.FEMALE);
             case GENDER -> setGender(content);
-            case CHILD -> setChild(content);
+            case CHILD -> setChildByName(content);
         }
     }
 
@@ -199,7 +201,7 @@ public class PeopleHandler extends DefaultHandler {
     public void endElement(String uri, String localName, String qName) throws SAXException {
         if (qName.equals("person")) {
             people.processPerson(currentPerson);
-//            people.addPerson(currentPerson);
+            currentPerson = new Person();
         }
         currentTag = null;
     }
@@ -217,12 +219,45 @@ public class PeopleHandler extends DefaultHandler {
         currentPerson.addChild(child);
     }
 
-    private void setChild(String childName) {
-        List<String> childFullName = splitByWhitespaces(childName);
+    private void setChildByName(String rawChildName) {
+        List<String> childFullName = Utils.splitByWhitespaces(rawChildName);
 
         List<Person> potentialChildren = people.getByFullname(childFullName);
 
-        //TODO how to do it??????
+        if (!potentialChildren.isEmpty()) {
+            Person child = new Person();
+            child.setFirstname(childFullName.getFirst());
+            child.setSurname(childFullName.getLast());
+            child.addParent(currentPerson);
+            child.setId(UUID.randomUUID().toString());
+            currentPerson.addChild(child);
+            people.addPerson(child);
+        }
+
+
+        for (Person child : potentialChildren) {
+            if (currentPersonCanBeParentOf(child)) {
+                 currentPerson.addChild(child);
+                 child.addParent(currentPerson);
+                 break;
+            }
+        }
+    }
+
+    private boolean currentPersonCanBeParentOf(Person child) {
+        Set<Person> parents = child.getParents();
+        if (parents.size() == 2) {
+            return false;
+        }
+
+        if (parents.size() == 1) {
+            var parent = child.getParents().stream().toList().getFirst();
+            if (parent.getGender() == null
+                    || parent.getGender() != currentPerson.getGender()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void setGender(String gender) {
@@ -232,23 +267,48 @@ public class PeopleHandler extends DefaultHandler {
         }
     }
 
+    private void addSpouseByName(String rawSpouseName) {
+        List<String> fullSpouseName = Utils.splitByWhitespaces(rawSpouseName);
+        List<Person> potentialSpouses = people.getByFullname(fullSpouseName);
+
+        for (Person spouse : potentialSpouses) {
+            if (currentPersonCanBeSpouseOf(spouse)) {
+                spouse.setSpouse(currentPerson);
+                currentPerson.setSpouse(spouse);
+                if (currentPerson.getGender() == Gender.FEMALE) {
+                    spouse.setGender(Gender.MALE);
+                } else if (currentPerson.getGender() == Gender.MALE) {
+                    spouse.setGender(Gender.FEMALE);
+                }
+            }
+        }
+    }
+
+    private boolean currentPersonCanBeSpouseOf(Person person) {
+        Person spouse = person.getSpouse();
+        if (spouse == null) {
+            return true;
+        }
+
+        return spouse.doesNotConflictWith(currentPerson) && spouse.equals(currentPerson);
+    }
+
     private void addSpouseById(String id, Gender spouseGender) {
         Person spouse = people.getById(id).orElse(new Person());
         spouse.setId(id);
+        spouse.setGender(spouseGender);
         spouse.setSpouse(currentPerson);
         currentPerson.setSpouse(spouse);
         if (spouseGender.equals(Gender.FEMALE)) {
-            spouse.setGender(Gender.FEMALE);
             currentPerson.setGender(Gender.MALE);
-        } else {
-            spouse.setGender(Gender.MALE);
+        } else if (spouseGender.equals(Gender.MALE)) {
             currentPerson.setGender(Gender.FEMALE);
         }
     }
 
 
     private void addSiblingByName(String rawName, Gender siblingGender) {
-        List<String> fullName = splitByWhitespaces(rawName);
+        List<String> fullName = Utils.splitByWhitespaces(rawName);
 
         List<Person> potentialSiblings = people.getByFullname(fullName);
 
@@ -259,7 +319,7 @@ public class PeopleHandler extends DefaultHandler {
     }
 
     private void addSiblingsByIds(String siblingIds) {
-        List<String> splittedIds  = splitByWhitespaces(siblingIds);
+        List<String> splittedIds  = Utils.splitByWhitespaces(siblingIds);
 
         for (String id : splittedIds) {
             Optional<Person> sibling = people.getById(id);
@@ -294,7 +354,7 @@ public class PeopleHandler extends DefaultHandler {
     }
 
     private void addParentByName(String parentName, Gender parentGender) {
-        List<String> fullname = splitByWhitespaces(parentName);
+        List<String> fullname = Utils.splitByWhitespaces(parentName);
 
         List<Person> potentialParents = people.getByFullname(fullname);
         for (Person parent : potentialParents) {
@@ -303,23 +363,4 @@ public class PeopleHandler extends DefaultHandler {
             currentPerson.addParent(parent);
         }
     }
-
-    private List<String> splitByWhitespaces(String input) {
-        return Arrays.stream(input.split(" "))
-                .filter(x -> !x.equals(" "))
-                .toList();
-    }
-
-    public static boolean isUUID(String str) {
-        if (str == null) {
-            return false;
-        }
-        try {
-            UUID uuid = UUID.fromString(str);
-            return uuid.toString().equals(str); // Убедимся, что формат полностью совпадает
-        } catch (IllegalArgumentException e) {
-            return false;
-        }
-    }
-
 }

@@ -18,11 +18,5 @@ public class Main {
             handler.getPeople().print();
             System.setOut(System.out);
         }
-
-//        handler.getPeople().print();
-//        for (String id : handler.getIds()) {
-//            System.out.println(id);
-//        }
-//        System.out.println(handler.getIds().size());
     }
 }

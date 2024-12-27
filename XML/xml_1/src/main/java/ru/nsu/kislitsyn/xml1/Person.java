@@ -14,9 +14,6 @@ import java.util.Set;
 @NoArgsConstructor
 public class Person {
     private String id;
-//    private List<Person> parents = new ArrayList<>();
-//    private List<Person> children = new ArrayList<>();
-//    private List<Person> siblings = new ArrayList<>();
     private Set<Person> parents = new HashSet<>();
     private Set<Person> children = new HashSet<>();
     private Set<Person> siblings = new HashSet<>();
@@ -28,12 +25,7 @@ public class Person {
     private int childrenNumber = -1;
 
     public void merge(Person person) {
-        this.id = id == null ? person.getId() : id;
-
-//        this.father = father == null ? person.getFather() : father;
-//
-//        this.mother = mother == null ? person.getMother() : mother;
-
+        this.id = Utils.isUUID(id) ? person.getId() : id;
 
         this.firstname = firstname == null ? person.getFirstname() : firstname;
 
@@ -50,9 +42,6 @@ public class Person {
         this.children.addAll(person.children);
 
         this.siblings.addAll(person.siblings);
-//        this.brothers.addAll(person.getBrothers());
-//
-//        this.sisters.addAll(person.getSisters());
     }
 
     public Person addChild(Person child) {
@@ -73,7 +62,11 @@ public class Person {
             if (this.childrenNumber == otherPerson.getChildrenNumber()
                 || this.childrenNumber == -1
                 || otherPerson.childrenNumber == -1) {
-                return true;
+                if (this.gender == null
+                    || otherPerson.gender == null
+                    || this.gender.equals(otherPerson.getGender())) {
+                    return true;
+                }
             }
         }
         return false;
@@ -100,14 +93,17 @@ public class Person {
     @Override
     public int hashCode() {
         int result = 17; // Начальное значение для хэш-кода
-        if (id != null) {
-            result = 31 * result + id.hashCode();
-        } else {
+//        if (id != null) {
+//            if (!Utils.isUUID(id)) {
+//                result = 31 * result + id.hashCode();
+//            }
+//        } else {
+            result = 31 * result + ((id != null) ? id.hashCode() : 0);
             result = 31 * result + (firstname != null ? firstname.hashCode() : 0);
             result = 31 * result + (surname != null ? surname.hashCode() : 0);
-            result = 31 * result + Integer.hashCode(childrenNumber);
-            result = 31 * result + Integer.hashCode(siblingsNumber);
-        }
+//            result = 31 * result + Integer.hashCode(childrenNumber);
+//            result = 31 * result + Integer.hashCode(siblingsNumber);
+//        }
         return result;
     }
 
@@ -116,9 +112,9 @@ public class Person {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Person{");
-        sb.append("id='").append(id).append('\'');
-        sb.append(", firstname='").append(firstname).append('\'');
-        sb.append(", surname='").append(surname).append('\'');
+        sb.append("id=").append(id);
+        sb.append(", firstname=").append(firstname);
+        sb.append(", surname=").append(surname);
         sb.append(", gender=").append(gender);
         if (spouse != null) {
             sb.append(", ").append(spouse.gender == Gender.MALE ? "husband=" : "wife=");
@@ -142,6 +138,9 @@ public class Person {
 
         sb.append(", children=[");
         for (Person child : children) {
+            if (Utils.isUUID(child.id)) {
+                continue;
+            }
             if (child.getFirstname() == null && child.getSurname() == null) {
                 continue;
             }
@@ -153,6 +152,9 @@ public class Person {
 
         sb.append(", siblings=[");
         for (Person sibling : siblings) {
+            if (Utils.isUUID(sibling.id)) {
+                continue;
+            }
             if (sibling.getFirstname() == null && sibling.getSurname() == null) {
                 continue;
             }
@@ -165,6 +167,4 @@ public class Person {
         sb.append('}');
         return sb.toString();
     }
-
-
 }
