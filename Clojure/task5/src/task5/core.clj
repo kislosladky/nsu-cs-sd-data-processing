@@ -11,9 +11,10 @@
   (dosync
    (swap! transaction-attempts inc)
    (alter left-fork inc)
+   (Thread/sleep 1000)
    (alter right-fork inc)
-   (Thread/sleep 300))
-  (Thread/sleep 300))
+   (Thread/sleep 200))
+  (Thread/sleep 200))
 
 (defn philosopher-dining [fork-pair]
   (let [[left-fork right-fork] fork-pair]
@@ -35,7 +36,7 @@
            (.start (philosopher [(nth fork-refs x) (nth fork-refs (rem (+ x 1) (count fork-refs)))])))))
 
 (defn -main [& args]
-  (let [num-forks 5
+  (let [num-forks 4
         forks (vec (repeatedly num-forks #(ref 0)))]
     (start-philosophers forks)
     (.start (Thread.
