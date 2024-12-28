@@ -88,4 +88,15 @@ public class People {
             people.remove(key);
         }
     }
+    public void removeDuplicatedPersons() {
+        for (Person person : people.values()) {
+            person.getSiblings().removeIf(sibling -> Utils.isUUID(sibling.getId()));
+            person.getParents().removeIf(parent -> Utils.isUUID(parent.getId()));
+            person.getChildren().removeIf(child -> Utils.isUUID(child.getId()));
+
+            person.setSiblings(new HashSet<>(person.getSiblings()));
+            person.setParents(new HashSet<>(person.getParents()));
+            person.setChildren(new HashSet<>(person.getChildren()));
+        }
+    }
 }

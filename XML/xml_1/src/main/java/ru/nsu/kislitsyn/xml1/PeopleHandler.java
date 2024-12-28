@@ -209,6 +209,7 @@ public class PeopleHandler extends DefaultHandler {
     @Override
     public void endDocument() throws SAXException {
         people.removeWrongKeys();
+        people.removeDuplicatedPersons();
     }
 
     private void addChildById(String childId, Gender childGender) {
