@@ -24,6 +24,10 @@ public class Person {
     private int siblingsNumber = -1;
     private int childrenNumber = -1;
 
+    public Person(String id) {
+        this.id = id;
+    }
+
     public void merge(Person person) {
         this.id = Utils.isUUID(id) ? person.getId() : id;
 
@@ -98,7 +102,7 @@ public class Person {
 //                result = 31 * result + id.hashCode();
 //            }
 //        } else {
-            result = 31 * result + ((id != null) ? id.hashCode() : 0);
+            result = 31 * result + ((id != null && !Utils.isUUID(id)) ? id.hashCode() : 0);
             result = 31 * result + (firstname != null ? firstname.hashCode() : 0);
             result = 31 * result + (surname != null ? surname.hashCode() : 0);
 //            result = 31 * result + Integer.hashCode(childrenNumber);

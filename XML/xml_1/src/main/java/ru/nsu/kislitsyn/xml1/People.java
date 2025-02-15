@@ -10,32 +10,34 @@ public class People {
     private final Map<String, Person> people = new HashMap<>();
 
     public void processPerson(Person person) {
-        if (person.getId() != null) {
-            people.put(person.getId(), person);
+        if (!Utils.isUUID(person.getId()) && people.containsKey(person.getId())) {
+            putPerson(person); //обновляем значение
         } else {
+            if (person.getFirstname() == null || person.getSurname() == null) {
+                System.out.println(person);
+                return;
+            }
             List<Person> mergeCandidates = getByFullname(
                     List.of(person.getFirstname(),
                             person.getSurname())
             );
 
             if (mergeCandidates.isEmpty()) {
-                people.put(UUID.randomUUID().toString(), person);
+                putPerson(person);
                 return;
             }
 
             for (Person mergePerson : mergeCandidates) {
                 if (person.doesNotConflictWith(mergePerson)) {
                     mergePerson.merge(person);
-                    if (mergePerson.getId() != null) {
-                        people.put(mergePerson.getId(), mergePerson);
-                    }
+                    putPerson(mergePerson);
                     break;
                 }
             }
         }
     }
 
-    public void addPerson(Person person) {
+    public void putPerson(Person person) {
         people.put(person.getId(), person);
     }
 
@@ -77,17 +79,9 @@ public class People {
     }
 
     public void removeWrongKeys() {
-        Set<String> keysToRemove = new HashSet<>();
-        for (String key : people.keySet()) {
-            if (Utils.isUUID(key)) {
-                keysToRemove.add(key);
-            }
-        }
-
-        for (String key : keysToRemove) {
-            people.remove(key);
-        }
+        people.keySet().removeIf(Utils::isUUID);
     }
+
     public void removeDuplicatedPersons() {
         for (Person person : people.values()) {
             person.getSiblings().removeIf(sibling -> Utils.isUUID(sibling.getId()));
