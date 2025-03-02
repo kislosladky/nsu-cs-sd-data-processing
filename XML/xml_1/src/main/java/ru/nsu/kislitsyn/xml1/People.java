@@ -10,25 +10,33 @@ public class People {
     private final Map<String, Person> people = new HashMap<>();
 
     public void processPerson(Person person) {
-        if (person.getId() != null) {
-            people.put(person.getId(), person);
+//        if (person.getId() != null) {
+        if (!Utils.isUUID(person.getId())) {
+            if (people.containsKey(person.getId())) {
+                Person toMerge = people.get(person.getId());
+                toMerge.merge(person);
+            } else {
+                addPerson(person);
+            }
         } else {
+            if (person.getFirstname() == null || person.getSurname() == null) {
+                System.out.println(person);
+                return;
+            }
             List<Person> mergeCandidates = getByFullname(
                     List.of(person.getFirstname(),
                             person.getSurname())
             );
 
             if (mergeCandidates.isEmpty()) {
-                people.put(UUID.randomUUID().toString(), person);
+                addPerson(person);
                 return;
             }
 
             for (Person mergePerson : mergeCandidates) {
                 if (person.doesNotConflictWith(mergePerson)) {
                     mergePerson.merge(person);
-                    if (mergePerson.getId() != null) {
-                        people.put(mergePerson.getId(), mergePerson);
-                    }
+                    addPerson(mergePerson);
                     break;
                 }
             }
@@ -68,35 +76,28 @@ public class People {
         for (Person person : people.values()) {
             System.out.println(person);
         }
-//        for (String key : people.keySet()) {
-//
-//            System.out.println(key + ": " + people.get(key));
-//
-//        }
         System.out.println("Amount is " + people.size());
     }
 
     public void removeWrongKeys() {
-        Set<String> keysToRemove = new HashSet<>();
-        for (String key : people.keySet()) {
-            if (Utils.isUUID(key)) {
-                keysToRemove.add(key);
-            }
-        }
-
-        for (String key : keysToRemove) {
-            people.remove(key);
-        }
+        people.keySet().removeIf(Utils::isUUID);
     }
+
     public void removeDuplicatedPersons() {
         for (Person person : people.values()) {
-            person.getSiblings().removeIf(sibling -> Utils.isUUID(sibling.getId()));
-            person.getParents().removeIf(parent -> Utils.isUUID(parent.getId()));
-            person.getChildren().removeIf(child -> Utils.isUUID(child.getId()));
+            person.getSiblings().removeIf(this::isPartialPerson);
+            person.getParents().removeIf(this::isPartialPerson);
+            person.getChildren().removeIf(this::isPartialPerson);
 
             person.setSiblings(new HashSet<>(person.getSiblings()));
             person.setParents(new HashSet<>(person.getParents()));
             person.setChildren(new HashSet<>(person.getChildren()));
         }
+    }
+
+    private boolean isPartialPerson(Person person) {
+        return Utils.isUUID(person.getId()) ||
+                person.getSurname() == null ||
+                person.getFirstname() == null;
     }
 }

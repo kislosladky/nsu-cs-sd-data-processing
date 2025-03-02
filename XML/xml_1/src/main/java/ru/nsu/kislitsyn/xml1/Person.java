@@ -92,18 +92,10 @@ public class Person {
 
     @Override
     public int hashCode() {
-        int result = 17; // Начальное значение для хэш-кода
-//        if (id != null) {
-//            if (!Utils.isUUID(id)) {
-//                result = 31 * result + id.hashCode();
-//            }
-//        } else {
-            result = 31 * result + ((id != null) ? id.hashCode() : 0);
-            result = 31 * result + (firstname != null ? firstname.hashCode() : 0);
-            result = 31 * result + (surname != null ? surname.hashCode() : 0);
-//            result = 31 * result + Integer.hashCode(childrenNumber);
-//            result = 31 * result + Integer.hashCode(siblingsNumber);
-//        }
+        int result = 17;
+        result = 31 * result + (!Utils.isUUID(id) ? id.hashCode() : 0);
+        result = 31 * result + (firstname != null ? firstname.hashCode() : 0);
+        result = 31 * result + (surname != null ? surname.hashCode() : 0);
         return result;
     }
 
