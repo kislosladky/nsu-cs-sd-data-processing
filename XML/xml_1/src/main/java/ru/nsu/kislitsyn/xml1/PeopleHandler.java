@@ -25,7 +25,6 @@ public class PeopleHandler extends DefaultHandler {
                     String id = attributes.getValue("id");
                     String name = attributes.getValue("name");
                     if (id != null) {
-//                        currentPerson = people.getById(id.trim()).orElse(new Person());
                         currentPerson.setId(id);
                     } else {
                         List<String> fullname = Utils.splitByWhitespaces(name.trim());
@@ -52,9 +51,7 @@ public class PeopleHandler extends DefaultHandler {
             case "id" -> {
                 if (attributes.getLength() > 0) {
                     String id = attributes.getValue("value").trim();
-//                    if (currentPerson.getId() == null || Utils.isUUID(currentPerson.getId())) {
                     currentPerson.setId(id);
-//                    }
                 }
             }
 
@@ -288,8 +285,9 @@ public class PeopleHandler extends DefaultHandler {
             if (currentPersonCanBeSpouseOf(spouse)) {
                 if (spouse.getSpouse() != null) {
                     Person toMerge = spouse.getSpouse();
-                    currentPerson.merge(toMerge);
-                    spouse.setSpouse(currentPerson);
+                    people.remove(toMerge);
+                    currentPerson = toMerge.merge(currentPerson);
+                    people.addPerson(toMerge);
                 } else {
                     spouse.setSpouse(currentPerson);
                     currentPerson.setSpouse(spouse);
@@ -314,10 +312,16 @@ public class PeopleHandler extends DefaultHandler {
     }
 
     private void addSpouseById(String id, Gender spouseGender) {
-        Person spouse = people.getById(id).orElse(new Person());
-        spouse.setId(id);
+        Person spouse = people.getById(id).orElse(people.addEmptyPerson(id));
         spouse.setGender(spouseGender);
-        spouse.setSpouse(currentPerson);
+        if (spouse.getSpouse() == null) {
+            spouse.setSpouse(currentPerson);
+        } else {
+            Person toMerge = spouse.getSpouse();
+            people.remove(toMerge);
+            currentPerson = toMerge.merge(currentPerson);
+            people.addPerson(toMerge);
+        }
         currentPerson.setSpouse(spouse);
         if (spouseGender.equals(Gender.FEMALE)) {
             currentPerson.setGender(Gender.MALE);
@@ -337,13 +341,14 @@ public class PeopleHandler extends DefaultHandler {
             sibling.setFirstname(fullName.getFirst());
             sibling.setSurname(fullName.getLast());
             sibling.setId(UUID.randomUUID().toString());
+            sibling.setGender(siblingGender);
             addCurrentPersonAsSiblingTo(sibling);
             people.addPerson(sibling);
         }
 
         for (Person person : potentialSiblings) {
-                person.setGender(siblingGender);
-                addCurrentPersonAsSiblingTo(person);
+//            person.setGender(siblingGender);
+            addCurrentPersonAsSiblingTo(person);
         }
     }
 
@@ -368,8 +373,7 @@ public class PeopleHandler extends DefaultHandler {
         if (parentId.equals("UNKNOWN")) {
             return;
         }
-        Person parent = people.getById(parentId).orElse(new Person());
-        parent.setId(parentId);
+        Person parent = people.getById(parentId).orElse(people.addEmptyPerson(parentId));
 
         parent.addChild(currentPerson);
         currentPerson.addParent(parent);

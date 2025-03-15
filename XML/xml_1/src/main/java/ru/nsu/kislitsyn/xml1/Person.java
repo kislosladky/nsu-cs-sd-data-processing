@@ -24,7 +24,7 @@ public class Person {
     private int siblingsNumber = -1;
     private int childrenNumber = -1;
 
-    public void merge(Person person) {
+    public Person merge(Person person) {
         this.id = Utils.isUUID(id) ? person.getId() : id;
 
         this.firstname = firstname == null ? person.getFirstname() : firstname;
@@ -42,6 +42,8 @@ public class Person {
         this.children.addAll(person.children);
 
         this.siblings.addAll(person.siblings);
+
+        return this;
     }
 
     public Person addChild(Person child) {
