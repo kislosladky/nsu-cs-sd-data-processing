@@ -90,7 +90,6 @@
   [state ware storage-atom amount]
   (let [bill (state :bill)                ;; Required wares for a cycle
         buffer (state :buffer)             ;; Current wares already collected
-        ;updated-buffer (update buffer ware #(+ % amount))  ;; Update buffer with the newly received items
         needed-amount (- (get bill ware 0) (get buffer ware 0))
         take-amount (min needed-amount amount)
         duration (state :duration)         ;; Cycle duration
