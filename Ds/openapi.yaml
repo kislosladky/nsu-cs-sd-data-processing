@@ -1,0 +1,298 @@
+openapi: 3.0.3
+info:
+  title: Flight Booking API
+  version: 1.0.1
+  description: RESTful API for flight booking, schedules, routes, and check-in. Language is selected via URL path.
+
+servers:
+  - url: http://localhost:8080
+
+components:
+  parameters:
+    LanguagePathParam:
+      name: lang
+      in: path
+      required: true
+      description: Language code (e.g., en, ru)
+      schema:
+        type: string
+        enum: [ en, ru ]
+    DepartureDate:
+      name: departure_date
+      in: query
+      required: true
+      schema:
+        type: string
+        format: date
+
+
+  schemas:
+    Passenger:
+      type: object
+      properties:
+        name:
+          type: string
+      required: [ name ]
+    BookingRequest:
+      type: object
+      properties:
+        flights:
+          type: array
+          items:
+            type: string
+        passengers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Passenger'
+      required: [ flights, passengers ]
+    CheckInRequest:
+      type: object
+      properties:
+        ticketNumber:
+          type: string
+        bookRef:
+          type: string
+        passengers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Passenger'
+      required: [ passengers ]
+    AirportInfo:
+      type: object
+      properties:
+        airportCode:
+          type: string
+        airportName:
+          type: string
+    CityName:
+      type: object
+      properties:
+        name:
+          type: string
+  responses:
+    NotFound:
+      description: Resource not found
+    BadRequest:
+      description: Invalid parameters provided
+    ServerError:
+      description: Internal server error
+
+
+paths:
+  /cities/{lang}:
+    get:
+      summary: List all available cities
+      parameters:
+        - $ref: '#/components/parameters/LanguagePathParam'
+      responses:
+        '200':
+          description: A list of cities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CityName'
+              example:
+                - name: Yakutsk
+                - name: Mirnyj
+                - name: Khabarovsk
+        '400':
+          description: Invalid language
+        '500':
+          description: Server error
+
+  /airports/{lang}:
+    get:
+      summary: List all available airports
+      parameters:
+        - $ref: '#/components/parameters/LanguagePathParam'
+      responses:
+        '200':
+          description: A list of airports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AirportInfo'
+              example:
+                - airportCode: SVO
+                  airportName: Sheremetyevo International Airport
+                - airportCode: VKO
+                  airportName: Vnukovo International Airport
+                - airportCode: DME
+                  airportName: Domodedovo International Airport
+        '400':
+          description: Invalid language
+
+  /cities/{city}/airports/{lang}:
+    get:
+      summary: List airports in a specific city (localized)
+      parameters:
+        - name: city
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/LanguagePathParam'
+      responses:
+        '200':
+          description: Localized list of airports in the city
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AirportInfo'
+              example:
+                - airportCode: SVO
+                  airportName: Sheremetyevo International Airport
+                - airportCode: VKO
+                  airportName: Vnukovo International Airport
+                - airportCode: DME
+                  airportName: Domodedovo International Airport
+        '400':
+          description: Invalid language
+        '406':
+          description: City not found
+
+
+  /schedule/{inbound}/{airport_code}/{lang}:
+    get:
+      summary: List inbound/outbound flight schedule for an airport
+      parameters:
+        - name: inbound
+          in: path
+          required: true
+          schema:
+            type: boolean
+        - name: airport_code
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: day
+          in: query
+          schema:
+            type: string
+            enum: [Mon, Tue, Wed, Thu, Fri, Sat, Sun]
+        - name: arrival_time
+          in: query
+          schema:
+            type: string
+            format: time
+        - name: flight_number
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/LanguagePathParam'
+      responses:
+        '200':
+          description: Schedule list
+          content:
+            application/json:
+              example:
+                airport: SVO
+                schedule:
+                  - flight_number: SU123
+                    type: departure
+                    time: "10:00:00"
+                    destination: CDG
+                  - flight_number: SU456
+                    type: arrival
+                    time: "13:00:00"
+                    origin: JFK
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /routes:
+    get:
+      summary: List routes between two points
+      parameters:
+        - name: origin
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: destination
+          in: query
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/DepartureDate'
+        - name: booking_class
+          in: query
+          schema:
+            type: string
+            enum: [Economy, Comfort, Business]
+        - name: max_connections
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+        - $ref: '#/components/parameters/LanguagePathParam'
+      responses:
+        '200':
+          description: A list of possible routes
+          content:
+            application/json:
+              example:
+                routes:
+                  - flights:
+                      - flight_id: SU123
+                        from: SVO
+                        to: CDG
+                        time: "2025-04-08T08:00:00"
+                    total_duration: "4h 20m"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /bookings:
+    post:
+      summary: Create a booking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: 
+              $ref: '#/components/schemas/BookingRequest'
+            example:
+              flights: [SU123]
+              passengers:
+                - name: Ivan Petrov
+      responses:
+        '200':
+          description: Booking created
+          content:
+            application/json:
+              example:
+                book_ref: ABC123
+                ticket_no:
+                  - 0001234567890
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /checkin:
+    post:
+      summary: Online check-in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckInRequest'
+            example:
+              ticket_no: 0001234567890
+              passenger_info:
+                name: Ivan Petrov
+      responses:
+        '200':
+          description: Check-in successful
+          content:
+            application/json:
+              example:
+                seat_no: 12A
+                boarding_pass_no: BP123456
+        '400':
+          $ref: '#/components/responses/BadRequest'
