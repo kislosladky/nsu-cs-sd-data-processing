@@ -69,6 +69,29 @@ components:
       properties:
         name:
           type: string
+    ScheduledFlightDto:
+      type: object
+      properties:
+        scheduledDeparture:
+          type: string
+          format: date-time
+          description: Scheduled departure time in ISO 8601 format
+        scheduledArrival:
+          type: string
+          format: date-time
+          description: Scheduled arrival time in ISO 8601 format
+        flightNumber:
+          type: string
+          description: Flight number
+        oppositeAirportCode:
+          type: string
+          description: IATA code of the opposite airport
+        oppositeAirportName:
+          type: string
+          description: Name of the opposite airport
+        aircraftCode:
+          type: string
+          description: Code of the aircraft
   responses:
     NotFound:
       description: Resource not found
@@ -192,17 +215,10 @@ paths:
           description: Schedule list
           content:
             application/json:
-              example:
-                airport: SVO
-                schedule:
-                  - flight_number: SU123
-                    type: departure
-                    time: "10:00:00"
-                    destination: CDG
-                  - flight_number: SU456
-                    type: arrival
-                    time: "13:00:00"
-                    origin: JFK
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ScheduledFlightDto'
         '400':
           $ref: '#/components/responses/BadRequest'
 
