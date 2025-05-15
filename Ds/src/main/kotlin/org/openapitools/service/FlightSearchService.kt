@@ -13,7 +13,7 @@ object FlightSearchService{
         return if (dow.isNullOrBlank()) null else Specification { root, query, critBuilder ->
             val toCharExpr: Expression<String>  = critBuilder.function(
                 "to_char", String::class.java,
-                root.get<Instant>("scheduled_departure"),
+                root.get<Instant>("scheduledDeparture"),
                 critBuilder.literal("Dy")
             )
             val lowerExpr = critBuilder.function("lower", String::class.java, toCharExpr)
@@ -26,7 +26,7 @@ object FlightSearchService{
         return if (dow.isNullOrBlank()) null else Specification { root, query, critBuilder ->
             val toCharExpr: Expression<String>  = critBuilder.function(
                 "to_char", String::class.java,
-                root.get<Instant>("scheduled_arrival"),
+                root.get<Instant>("scheduledArrival"),
                 critBuilder.literal("Dy")
             )
             val lowerExpr = critBuilder.function("lower", String::class.java, toCharExpr)
@@ -39,7 +39,7 @@ object FlightSearchService{
         return if (arrivalTime.isNullOrBlank()) null else Specification { root, query, criteriaBuilder ->
             val toCharExpr: Expression<String> = criteriaBuilder.function(
                 "to_char", String::class.java,
-                root.get<Instant>("scheduled_arrival"),
+                root.get<Instant>("scheduledArrival"),
                 criteriaBuilder.literal("HH24:MI:SS")
             )
 
@@ -51,7 +51,7 @@ object FlightSearchService{
         return if (departureTime.isNullOrBlank()) null else Specification { root, query, criteriaBuilder ->
             val toCharExpr: Expression<String> = criteriaBuilder.function(
                 "to_char", String::class.java,
-                root.get<Instant>("scheduled_departure"),
+                root.get<Instant>("scheduledDeparture"),
                 criteriaBuilder.literal("HH24:MI:SS")
             )
 

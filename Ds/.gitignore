@@ -3,3 +3,4 @@
 .gradle/
 .openapi-generator
 .openapi-generator-ignore
+build/

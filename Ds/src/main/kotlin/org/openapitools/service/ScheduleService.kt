@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service
 class ScheduleService(
     private val flightRepository: FlightRepository,
 ) {
-    fun findScheduledFlights(
+    fun  findScheduledFlights(
         airportCode: String,
         isOrigin: Boolean,
         lang: String,
@@ -26,14 +26,22 @@ class ScheduleService(
             spec.and(FlightSearchService.destination(airportCode))
         }
 
-        FlightSearchService.arrivalDayOfWeek(day)?.let {
+        val dowSpec = if (isOrigin) {
+            FlightSearchService.arrivalDayOfWeek(day)
+        } else {
+            FlightSearchService.departureDayOfWeek(day)
+        }
+        dowSpec?.let {
             spec = spec.and(it)
         }
 
-        spec = if (isOrigin) {
-            spec.and(FlightSearchService.timeOfDeparture(departureArrivalTime))
+        val timeSpec = if (isOrigin) {
+            FlightSearchService.timeOfDeparture(departureArrivalTime)
         } else {
-            spec.and(FlightSearchService.timeOfArrival(departureArrivalTime))
+            FlightSearchService.timeOfArrival(departureArrivalTime)
+        }
+        timeSpec?.let {
+            spec = spec.and(it)
         }
 
         FlightSearchService.flightNumber(flightNumber)?.let {
