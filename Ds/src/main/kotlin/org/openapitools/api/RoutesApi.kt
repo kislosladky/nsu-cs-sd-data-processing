@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.enums.*
 import io.swagger.v3.oas.annotations.media.*
 import io.swagger.v3.oas.annotations.responses.*
 import io.swagger.v3.oas.annotations.security.*
+import org.openapitools.model.dto.RouteDTO
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -51,7 +52,7 @@ interface RoutesApi {
             value = ["/routes"],
             produces = ["application/json"]
     )
-    fun routesGet(@NotNull @Parameter(description = "", required = true) @Valid @RequestParam(value = "origin", required = true) origin: kotlin.String,@NotNull @Parameter(description = "", required = true) @Valid @RequestParam(value = "destination", required = true) destination: kotlin.String,@NotNull @Parameter(description = "", required = true) @Valid @RequestParam(value = "departure_date", required = true) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) departureDate: java.time.LocalDate,@Parameter(description = "Language code (e.g., en, ru)", required = true, schema = Schema(allowableValues = ["\"en\"", "\"ru\""])) @PathVariable("lang") lang: kotlin.String,@Parameter(description = "", schema = Schema(allowableValues = ["Economy", "Comfort", "Business"])) @Valid @RequestParam(value = "booking_class", required = false) bookingClass: kotlin.String?,@Min(0)@Parameter(description = "") @Valid @RequestParam(value = "max_connections", required = false) maxConnections: kotlin.Int?): ResponseEntity<Unit> {
-        return ResponseEntity(HttpStatus.NOT_IMPLEMENTED)
+    fun routesGet(@NotNull @Parameter(description = "", required = true) @Valid @RequestParam(value = "origin", required = true) origin: kotlin.String,@NotNull @Parameter(description = "", required = true) @Valid @RequestParam(value = "destination", required = true) destination: kotlin.String,@NotNull @Parameter(description = "", required = true) @Valid @RequestParam(value = "departure_date", required = true) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) departureDate: java.time.LocalDate,@Parameter(description = "Language code (e.g., en, ru)", required = false, schema = Schema(allowableValues = ["\"en\"", "\"ru\""])) @RequestParam("lang") lang: kotlin.String = "ru",@Parameter(description = "", schema = Schema(allowableValues = ["Economy", "Comfort", "Business"])) @Valid @RequestParam(value = "booking_class", required = false) bookingClass: kotlin.String?,@Min(0)@Parameter(description = "") @Valid @RequestParam(value = "max_connections", required = false) maxConnections: kotlin.Int?): List<RouteDTO> {
+        return emptyList()
     }
 }

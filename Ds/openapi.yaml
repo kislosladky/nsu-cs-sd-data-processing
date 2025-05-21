@@ -247,7 +247,12 @@ paths:
           schema:
             type: integer
             minimum: 0
-        - $ref: '#/components/parameters/LanguagePathParam'
+        - name: lang
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [ en, ru ]
       responses:
         '200':
           description: A list of possible routes

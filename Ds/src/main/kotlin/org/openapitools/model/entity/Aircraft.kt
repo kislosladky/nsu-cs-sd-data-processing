@@ -6,6 +6,8 @@ import javax.persistence.Column
 import javax.persistence.Convert
 import javax.persistence.Entity
 import javax.persistence.Id
+import javax.persistence.JoinColumn
+import javax.persistence.OneToMany
 import javax.persistence.Table
 import javax.validation.constraints.NotNull
 import javax.validation.constraints.Size
@@ -24,5 +26,9 @@ data class Aircraft(
 
     @Column(name = "model", columnDefinition = "jsonb not null")
     @Convert(converter = MultiLanguageFieldConverter::class)
-    val model: MultiLanguageField
+    val model: MultiLanguageField,
+
+    @OneToMany
+    @JoinColumn(name = "aircraft_code")
+    val seats: MutableSet<Seat>,
 )

@@ -20,4 +20,15 @@ interface AirportRepository : JpaRepository<Airport, String> {
             @Param("city") city: String,
             @Param("lang") lang: String
     ): List<Airport>
+
+    @Query(
+        """
+            select ad.airport_code, ad.timezone, ad.airport_name, ad.city
+            from airports_data ad
+            where ad.city ->> :lang = :airportInfo or 
+            ad.airport_name ->> :lang = :airportInfo or
+            ad.airport_code = :airportInfo
+        """, nativeQuery = true
+    )
+    fun findByCityOrAirportNameOrAirportCode(airportInfo: String, lang: String): List<Airport>
 }
