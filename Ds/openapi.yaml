@@ -249,7 +249,7 @@ paths:
             minimum: 0
         - name: lang
           in: query
-          required: true
+          required: false
           schema:
             type: string
             enum: [ en, ru ]
